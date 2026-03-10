@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>24秒 ショットクロック</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .header {
+      font-size: 1.2rem;
+      letter-spacing: 0.3em;
+      color: #888;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .timer-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+      width: min(65vw, 280px);
+      height: min(65vw, 280px);
+      flex-shrink: 0;
+    }
+
+    .timer-display {
+      font-size: clamp(5rem, 18vw, 8rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      transition: color 0.2s;
+      letter-spacing: -0.02em;
+    }
+
+    .timer-display.warning {
+      color: #f59e0b;
+    }
+
+    .timer-display.danger {
+      color: #ef4444;
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+
+    .timer-display.expired {
+      color: #ef4444;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .timer-decimal {
+      font-size: clamp(2rem, 7vw, 4rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      vertical-align: baseline;
+      margin-left: 4px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 500px;
+      padding: 0 16px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 16px 28px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
+      min-width: 100px;
+      letter-spacing: 0.05em;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-start {
+      background: #22c55e;
+      color: #fff;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .btn-stop {
+      background: #ef4444;
+      color: #fff;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .btn-reset-24 {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .btn-reset-14 {
+      background: #8b5cf6;
+      color: #fff;
+    }
+
+    .btn-reset-full {
+      background: #6b7280;
+      color: #fff;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .status-bar {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #666;
+      height: 1.2em;
+    }
+
+    .progress-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .progress-ring circle {
+      transition: stroke 0.2s;
+    }
+
+    .keyboard-hint {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: #444;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 480px) {
+      .btn {
+        padding: 14px 20px;
+        font-size: 1rem;
+        min-width: 80px;
+      }
+      .keyboard-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">SHOT CLOCK</div>
+
+  <div class="timer-container">
+    <svg class="progress-ring" width="200" height="200" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="95" fill="none" stroke="#222" stroke-width="5"/>
+      <circle id="progressCircle" cx="100" cy="100" r="95" fill="none" stroke="#22c55e"
+              stroke-width="5" stroke-linecap="round"
+              stroke-dasharray="596.90" stroke-dashoffset="0"
+              transform="rotate(-90 100 100)"/>
+    </svg>
+    <div>
+      <span id="timerDisplay" class="timer-display">24</span><span id="timerDecimal" class="timer-decimal"></span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="btnStart" class="btn btn-start" onclick="startTimer()">START</button>
+    <button id="btnStop" class="btn btn-stop" onclick="stopTimer()" style="display:none">STOP</button>
+    <button id="btnReset24" class="btn btn-reset-24" onclick="resetTimer(24)">24</button>
+    <button id="btnReset14" class="btn btn-reset-14" onclick="resetTimer(14)">14</button>
+    <button id="btnResetFull" class="btn btn-reset-full" onclick="fullReset()">RESET</button>
+  </div>
+
+  <div id="statusBar" class="status-bar"></div>
+
+  <div class="keyboard-hint">
+    Space: Start/Stop &nbsp; R: 24秒リセット &nbsp; T: 14秒リセット &nbsp; Esc: フルリセット
+  </div>
+
+  <script>
+    const TOTAL_TIME = 24;
+    const CIRCUMFERENCE = 2 * Math.PI * 95;
+
+    let timeLeft = TOTAL_TIME;
+    let maxTime = TOTAL_TIME;
+    let running = false;
+    let lastTimestamp = null;
+    let animFrameId = null;
+    let expired = false;
+
+    const timerDisplay = document.getElementById('timerDisplay');
+    const timerDecimal = document.getElementById('timerDecimal');
+    const progressCircle = document.getElementById('progressCircle');
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const statusBar = document.getElementById('statusBar');
+
+    // ブザー音を生成
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playBuzzer() {
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      oscillator.type = 'square';
+      oscillator.frequency.value = 800;
+      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 1.2);
+    }
+
+    function updateDisplay() {
+      const seconds = Math.ceil(timeLeft * 10) / 10;
+
+      if (timeLeft <= 0) {
+        timerDisplay.textContent = '0';
+        timerDecimal.textContent = '.0';
+        timerDisplay.className = 'timer-display expired';
+      } else if (timeLeft <= 5) {
+        // 5秒以下は小数点1桁表示
+        const whole = Math.floor(timeLeft);
+        const decimal = Math.floor((timeLeft - whole) * 10);
+        timerDisplay.textContent = whole;
+        timerDecimal.textContent = '.' + decimal;
+        timerDisplay.className = 'timer-display danger';
+      } else if (timeLeft <= 8) {
+        timerDisplay.textContent = Math.ceil(timeLeft);
+        timerDecimal.textContent = '';
+        timerDisplay.className = 'timer-display warning';
+      } else {
+        timerDisplay.textContent = Math.ceil(timeLeft);
+        timerDecimal.textContent = '';
+        timerDisplay.className = 'timer-display';
+      }
+
+      // プログレスリング更新
+      const progress = 1 - (timeLeft / maxTime);
+      const offset = CIRCUMFERENCE * progress;
+      progressCircle.style.strokeDashoffset = -offset;
+
+      if (timeLeft <= 0) {
+        progressCircle.style.stroke = '#ef4444';
+      } else if (timeLeft <= 5) {
+        progressCircle.style.stroke = '#ef4444';
+      } else if (timeLeft <= 8) {
+        progressCircle.style.stroke = '#f59e0b';
+      } else {
+        progressCircle.style.stroke = '#22c55e';
+      }
+    }
+
+    function tick(timestamp) {
+      if (!running) return;
+
+      if (lastTimestamp === null) {
+        lastTimestamp = timestamp;
+      }
+
+      const delta = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+
+      timeLeft = Math.max(0, timeLeft - delta);
+      updateDisplay();
+
+      if (timeLeft <= 0 && !expired) {
+        expired = true;
+        running = false;
+        playBuzzer();
+        statusBar.textContent = 'VIOLATION - 24秒オーバー';
+        statusBar.style.color = '#ef4444';
+        showStartButton();
+        return;
+      }
+
+      animFrameId = requestAnimationFrame(tick);
+    }
+
+    function startTimer() {
+      if (expired) return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      running = true;
+      lastTimestamp = null;
+      statusBar.textContent = '';
+      showStopButton();
+      animFrameId = requestAnimationFrame(tick);
+    }
+
+    function stopTimer() {
+      running = false;
+      lastTimestamp = null;
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      showStartButton();
+      statusBar.textContent = 'STOPPED';
+      statusBar.style.color = '#f59e0b';
+    }
+
+    function resetTimer(seconds) {
+      running = false;
+      lastTimestamp = null;
+      expired = false;
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      timeLeft = seconds;
+      maxTime = seconds;
+      updateDisplay();
+      showStartButton();
+      statusBar.textContent = seconds + '秒にリセット';
+      statusBar.style.color = '#888';
+    }
+
+    function fullReset() {
+      resetTimer(TOTAL_TIME);
+      statusBar.textContent = '';
+    }
+
+    function showStartButton() {
+      btnStart.style.display = '';
+      btnStop.style.display = 'none';
+    }
+
+    function showStopButton() {
+      btnStart.style.display = 'none';
+      btnStop.style.display = '';
+    }
+
+    // キーボードショートカット
+    document.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          if (running) {
+            stopTimer();
+          } else if (!expired) {
+            startTimer();
+          }
+          break;
+        case 'KeyR':
+          resetTimer(24);
+          break;
+        case 'KeyT':
+          resetTimer(14);
+          break;
+        case 'Escape':
+          fullReset();
+          break;
+      }
+    });
+
+    // 初期表示
+    updateDisplay();
+  </script>
+</body>
+</html>
