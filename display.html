@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>24秒 ショットクロック - ディスプレイ</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background: #000;
+      background-image: radial-gradient(ellipse at 50% 50%, rgba(255,100,0,0.06) 0%, transparent 70%);
+      color: #fff;
+      font-family: 'Orbitron', 'Segoe UI', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .timer-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: min(88vw, 88vh);
+      height: min(88vw, 88vh);
+    }
+
+    .timer-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 75%;
+      height: 75%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,140,0,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      transition: background 0.3s;
+    }
+
+    .timer-glow.danger {
+      background: radial-gradient(circle, rgba(239,68,68,0.15) 0%, transparent 70%);
+    }
+
+    .progress-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .progress-ring circle {
+      transition: stroke 0.2s;
+    }
+
+    .timer-display {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(8rem, 38vw, 24rem);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      transition: color 0.2s, text-shadow 0.3s;
+      letter-spacing: -0.02em;
+      text-shadow: 0 0 40px rgba(255,255,255,0.12);
+    }
+
+    .timer-display.warning {
+      color: #f97316;
+      text-shadow: 0 0 60px rgba(249,115,22,0.5);
+    }
+
+    .timer-display.danger {
+      color: #ef4444;
+      text-shadow: 0 0 80px rgba(239,68,68,0.6);
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+
+    .timer-display.expired {
+      color: #ef4444;
+      text-shadow: 0 0 100px rgba(239,68,68,0.8);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .timer-decimal {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(3rem, 14vw, 12rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      vertical-align: baseline;
+      margin-left: 4px;
+    }
+
+    .status {
+      position: fixed;
+      bottom: 16px;
+      font-size: 0.7rem;
+      color: #333;
+      letter-spacing: 0.2em;
+    }
+
+    .status.connected {
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+  <div class="timer-container">
+    <svg class="progress-ring" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="4"/>
+      <circle id="progressCircle" cx="100" cy="100" r="95" fill="none" stroke="#f97316"
+              stroke-width="4" stroke-linecap="round"
+              stroke-dasharray="596.90" stroke-dashoffset="0"
+              transform="rotate(-90 100 100)"
+              style="filter: drop-shadow(0 0 10px rgba(249,115,22,0.6))"/>
+    </svg>
+    <div id="timerGlow" class="timer-glow"></div>
+    <div>
+      <span id="timerDisplay" class="timer-display">24</span><span id="timerDecimal" class="timer-decimal"></span>
+    </div>
+  </div>
+
+  <div id="status" class="status">CONNECTING...</div>
+
+  <script>
+    const CIRCUMFERENCE = 2 * Math.PI * 95;
+
+    const timerDisplay = document.getElementById('timerDisplay');
+    const timerDecimal = document.getElementById('timerDecimal');
+    const progressCircle = document.getElementById('progressCircle');
+    const timerGlow = document.getElementById('timerGlow');
+    const statusEl = document.getElementById('status');
+
+    function updateDisplay(timeLeft, maxTime) {
+      if (timeLeft <= 0) {
+        timerDisplay.textContent = '0';
+        timerDecimal.textContent = '.0';
+        timerDisplay.className = 'timer-display expired';
+        timerGlow.className = 'timer-glow danger';
+      } else if (timeLeft <= 5) {
+        const whole = Math.floor(timeLeft);
+        const decimal = Math.floor((timeLeft - whole) * 10);
+        timerDisplay.textContent = whole;
+        timerDecimal.textContent = '.' + decimal;
+        timerDisplay.className = 'timer-display danger';
+        timerGlow.className = 'timer-glow danger';
+      } else if (timeLeft <= 8) {
+        timerDisplay.textContent = Math.ceil(timeLeft);
+        timerDecimal.textContent = '';
+        timerDisplay.className = 'timer-display warning';
+        timerGlow.className = 'timer-glow';
+      } else {
+        timerDisplay.textContent = Math.ceil(timeLeft);
+        timerDecimal.textContent = '';
+        timerDisplay.className = 'timer-display';
+        timerGlow.className = 'timer-glow';
+      }
+
+      // プログレスリング更新
+      const progress = 1 - (timeLeft / maxTime);
+      const offset = CIRCUMFERENCE * progress;
+      progressCircle.style.strokeDashoffset = -offset;
+
+      if (timeLeft <= 0) {
+        progressCircle.style.stroke = '#ef4444';
+        progressCircle.style.filter = 'drop-shadow(0 0 12px rgba(239,68,68,0.8))';
+      } else if (timeLeft <= 5) {
+        progressCircle.style.stroke = '#ef4444';
+        progressCircle.style.filter = 'drop-shadow(0 0 12px rgba(239,68,68,0.7))';
+      } else if (timeLeft <= 8) {
+        progressCircle.style.stroke = '#f97316';
+        progressCircle.style.filter = 'drop-shadow(0 0 10px rgba(249,115,22,0.6))';
+      } else {
+        progressCircle.style.stroke = '#f97316';
+        progressCircle.style.filter = 'drop-shadow(0 0 10px rgba(249,115,22,0.6))';
+      }
+    }
+
+    // BroadcastChannel で管理コンソールから受信
+    const channel = new BroadcastChannel('shot-clock-sync');
+    channel.onmessage = (e) => {
+      const { timeLeft, maxTime } = e.data;
+      updateDisplay(timeLeft, maxTime);
+
+      statusEl.textContent = 'LIVE';
+      statusEl.className = 'status connected';
+    };
+  </script>
+</body>
+</html>
