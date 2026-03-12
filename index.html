@@ -326,43 +326,59 @@
     function playBuzzer(offset = 0) {
       const t = audioCtx.currentTime + offset;
 
-      // 低音のベース（バスケブザーらしい太い音）
-      const osc1 = audioCtx.createOscillator();
-      const gain1 = audioCtx.createGain();
-      osc1.type = 'sawtooth';
-      osc1.frequency.setValueAtTime(180, t);
-      osc1.frequency.linearRampToValueAtTime(160, t + 2.0);
-      gain1.gain.setValueAtTime(0.5, t);
-      gain1.gain.setValueAtTime(0.5, t + 0.05);
-      gain1.gain.linearRampToValueAtTime(0.0, t + 2.0);
-      osc1.connect(gain1);
-      gain1.connect(audioCtx.destination);
-      osc1.start(t);
-      osc1.stop(t + 2.0);
+      // ディストーション（歪み）を作成
+      const distortion = audioCtx.createWaveShaper();
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) {
+        const x = (i * 2) / 256 - 1;
+        curve[i] = (Math.PI + 300) * x / (Math.PI + 300 * Math.abs(x));
+      }
+      distortion.curve = curve;
 
-      // 中音（ブザーの張り感）
-      const osc2 = audioCtx.createOscillator();
-      const gain2 = audioCtx.createGain();
-      osc2.type = 'square';
-      osc2.frequency.setValueAtTime(360, t);
-      gain2.gain.setValueAtTime(0.25, t);
-      gain2.gain.linearRampToValueAtTime(0.0, t + 1.5);
-      osc2.connect(gain2);
-      gain2.connect(audioCtx.destination);
-      osc2.start(t);
-      osc2.stop(t + 1.5);
+      // コンプレッサー（音圧を上げる）
+      const compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.value = -20;
+      compressor.knee.value = 5;
+      compressor.ratio.value = 12;
+      compressor.attack.value = 0.001;
+      compressor.release.value = 0.1;
 
-      // 立ち上がりの鋭さ（アタック感）
-      const osc3 = audioCtx.createOscillator();
-      const gain3 = audioCtx.createGain();
-      osc3.type = 'square';
-      osc3.frequency.setValueAtTime(720, t);
-      gain3.gain.setValueAtTime(0.3, t);
-      gain3.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
-      osc3.connect(gain3);
-      gain3.connect(audioCtx.destination);
-      osc3.start(t);
-      osc3.stop(t + 0.3);
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0.0, t);
+      masterGain.gain.linearRampToValueAtTime(1.0, t + 0.01); // 鋭いアタック
+      masterGain.gain.setValueAtTime(1.0, t + 0.8);
+      masterGain.gain.linearRampToValueAtTime(0.0, t + 2.2);
+
+      distortion.connect(compressor);
+      compressor.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      // メイン音（少しデチューンして太さを出す）
+      [310, 314, 620].forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = i < 2 ? 'sawtooth' : 'square';
+        osc.frequency.setValueAtTime(freq, t);
+        g.gain.value = i === 2 ? 0.3 : 0.5;
+        osc.connect(g);
+        g.connect(distortion);
+        osc.start(t);
+        osc.stop(t + 2.2);
+      });
+
+      // 衝撃音（ノイズバースト）で打撃感を演出
+      const bufferSize = audioCtx.sampleRate * 0.08;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.6, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      noise.connect(noiseGain);
+      noiseGain.connect(audioCtx.destination);
+      noise.start(t);
     }
 
     function updateDisplay() {
