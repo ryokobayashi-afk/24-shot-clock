@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>24秒 ショットクロック</title>
+  <title>24秒 ショットクロック - コンソール</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+
     * {
       margin: 0;
       padding: 0;
@@ -14,9 +16,12 @@
     }
 
     body {
-      background: #111;
+      background: #0a0a0f;
+      background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(255,100,0,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(0,80,255,0.06) 0%, transparent 60%);
       color: #fff;
-      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'Orbitron', 'Segoe UI', sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -26,11 +31,12 @@
     }
 
     .header {
-      font-size: 1.2rem;
-      letter-spacing: 0.3em;
-      color: #888;
+      font-size: 0.85rem;
+      letter-spacing: 0.5em;
+      color: #f97316;
       margin-bottom: 8px;
       text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(249,115,22,0.4);
     }
 
     .timer-container {
@@ -38,40 +44,63 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
       width: min(65vw, 280px);
       height: min(65vw, 280px);
       flex-shrink: 0;
     }
 
+    .timer-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      height: 80%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,140,0,0.1) 0%, transparent 70%);
+      pointer-events: none;
+      transition: background 0.3s;
+    }
+
+    .timer-glow.danger {
+      background: radial-gradient(circle, rgba(239,68,68,0.15) 0%, transparent 70%);
+    }
+
     .timer-display {
+      font-family: 'Orbitron', monospace;
       font-size: clamp(5rem, 18vw, 8rem);
-      font-weight: 700;
+      font-weight: 900;
       font-variant-numeric: tabular-nums;
       line-height: 1;
-      transition: color 0.2s;
+      transition: color 0.2s, text-shadow 0.3s;
       letter-spacing: -0.02em;
+      text-shadow: 0 0 30px rgba(255,255,255,0.15);
     }
 
     .timer-display.warning {
-      color: #f59e0b;
+      color: #f97316;
+      text-shadow: 0 0 40px rgba(249,115,22,0.5);
     }
 
     .timer-display.danger {
       color: #ef4444;
+      text-shadow: 0 0 50px rgba(239,68,68,0.6);
       animation: pulse 0.5s ease-in-out infinite;
     }
 
     .timer-display.expired {
       color: #ef4444;
+      text-shadow: 0 0 60px rgba(239,68,68,0.7);
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50% { opacity: 0.4; }
     }
 
     .timer-decimal {
+      font-family: 'Orbitron', monospace;
       font-size: clamp(2rem, 7vw, 4rem);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
@@ -81,7 +110,7 @@
 
     .controls {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
       max-width: 500px;
@@ -90,47 +119,95 @@
 
     .btn {
       border: none;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      padding: 16px 28px;
+      border-radius: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 14px 24px;
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.15s;
-      min-width: 100px;
-      letter-spacing: 0.05em;
+      transition: transform 0.1s, box-shadow 0.2s;
+      min-width: 90px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
     .btn:active {
-      transform: scale(0.95);
+      transform: scale(0.93);
     }
 
     .btn-start {
-      background: #22c55e;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
       color: #fff;
       flex: 1;
-      min-width: 140px;
+      min-width: 130px;
+      box-shadow: 0 4px 20px rgba(34,197,94,0.3);
     }
 
     .btn-stop {
-      background: #ef4444;
+      background: linear-gradient(135deg, #dc2626, #ef4444);
       color: #fff;
       flex: 1;
-      min-width: 140px;
+      min-width: 130px;
+      box-shadow: 0 4px 20px rgba(239,68,68,0.3);
     }
 
     .btn-reset-24 {
-      background: #3b82f6;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
       color: #fff;
+      box-shadow: 0 4px 15px rgba(59,130,246,0.3);
     }
 
     .btn-reset-14 {
-      background: #8b5cf6;
+      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
       color: #fff;
+      box-shadow: 0 4px 15px rgba(139,92,246,0.3);
     }
 
     .btn-reset-full {
-      background: #6b7280;
+      background: linear-gradient(135deg, #4b5563, #6b7280);
       color: #fff;
+    }
+
+    .adjust-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .adjust-row.hidden {
+      display: none;
+    }
+
+    .btn-adjust {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #ccc;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 10px;
+      min-width: 70px;
+    }
+
+    .btn-toggle {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #555;
+      font-size: 0.7rem;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    .btn-display {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 8px 18px;
+      border-radius: 20px;
+      margin-top: 8px;
+      box-shadow: 0 4px 15px rgba(14,165,233,0.25);
     }
 
     .btn:disabled {
@@ -139,10 +216,11 @@
     }
 
     .status-bar {
-      margin-top: 20px;
-      font-size: 0.9rem;
-      color: #666;
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: #555;
       height: 1.2em;
+      letter-spacing: 0.1em;
     }
 
     .progress-ring {
@@ -163,16 +241,18 @@
       bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.75rem;
-      color: #444;
+      font-size: 0.65rem;
+      color: #333;
       text-align: center;
       white-space: nowrap;
+      font-family: 'Segoe UI', sans-serif;
+      letter-spacing: 0.05em;
     }
 
     @media (max-width: 480px) {
       .btn {
-        padding: 14px 20px;
-        font-size: 1rem;
+        padding: 12px 18px;
+        font-size: 0.9rem;
         min-width: 80px;
       }
       .keyboard-hint {
@@ -182,16 +262,18 @@
   </style>
 </head>
 <body>
-  <div class="header">SHOT CLOCK</div>
+  <div class="header">SHOT CLOCK — CONSOLE</div>
 
   <div class="timer-container">
     <svg class="progress-ring" width="200" height="200" viewBox="0 0 200 200">
-      <circle cx="100" cy="100" r="95" fill="none" stroke="#222" stroke-width="5"/>
-      <circle id="progressCircle" cx="100" cy="100" r="95" fill="none" stroke="#22c55e"
+      <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
+      <circle id="progressCircle" cx="100" cy="100" r="95" fill="none" stroke="#f97316"
               stroke-width="5" stroke-linecap="round"
               stroke-dasharray="596.90" stroke-dashoffset="0"
-              transform="rotate(-90 100 100)"/>
+              transform="rotate(-90 100 100)"
+              style="filter: drop-shadow(0 0 6px rgba(249,115,22,0.5))"/>
     </svg>
+    <div id="timerGlow" class="timer-glow"></div>
     <div>
       <span id="timerDisplay" class="timer-display">24</span><span id="timerDecimal" class="timer-decimal"></span>
     </div>
@@ -204,6 +286,13 @@
     <button id="btnReset14" class="btn btn-reset-14" onclick="resetTimer(14)">14</button>
     <button id="btnResetFull" class="btn btn-reset-full" onclick="fullReset()">RESET</button>
   </div>
+
+  <div id="adjustRow" class="adjust-row hidden">
+    <button class="btn btn-adjust" onclick="adjustTime(-1)">-1秒</button>
+    <button class="btn btn-adjust" onclick="adjustTime(+1)">+1秒</button>
+  </div>
+  <button class="btn btn-toggle" onclick="toggleAdjust()">±1秒 表示</button>
+  <button class="btn btn-display" onclick="openDisplay()">ディスプレイを開く</button>
 
   <div id="statusBar" class="status-bar"></div>
 
@@ -225,6 +314,7 @@
     const timerDisplay = document.getElementById('timerDisplay');
     const timerDecimal = document.getElementById('timerDecimal');
     const progressCircle = document.getElementById('progressCircle');
+    const timerGlow = document.getElementById('timerGlow');
     const btnStart = document.getElementById('btnStart');
     const btnStop = document.getElementById('btnStop');
     const statusBar = document.getElementById('statusBar');
@@ -248,27 +338,28 @@
     }
 
     function updateDisplay() {
-      const seconds = Math.ceil(timeLeft * 10) / 10;
-
       if (timeLeft <= 0) {
         timerDisplay.textContent = '0';
         timerDecimal.textContent = '.0';
         timerDisplay.className = 'timer-display expired';
+        timerGlow.className = 'timer-glow danger';
       } else if (timeLeft <= 5) {
-        // 5秒以下は小数点1桁表示
         const whole = Math.floor(timeLeft);
         const decimal = Math.floor((timeLeft - whole) * 10);
         timerDisplay.textContent = whole;
         timerDecimal.textContent = '.' + decimal;
         timerDisplay.className = 'timer-display danger';
+        timerGlow.className = 'timer-glow danger';
       } else if (timeLeft <= 8) {
         timerDisplay.textContent = Math.ceil(timeLeft);
         timerDecimal.textContent = '';
         timerDisplay.className = 'timer-display warning';
+        timerGlow.className = 'timer-glow';
       } else {
         timerDisplay.textContent = Math.ceil(timeLeft);
         timerDecimal.textContent = '';
         timerDisplay.className = 'timer-display';
+        timerGlow.className = 'timer-glow';
       }
 
       // プログレスリング更新
@@ -278,12 +369,16 @@
 
       if (timeLeft <= 0) {
         progressCircle.style.stroke = '#ef4444';
+        progressCircle.style.filter = 'drop-shadow(0 0 8px rgba(239,68,68,0.7))';
       } else if (timeLeft <= 5) {
         progressCircle.style.stroke = '#ef4444';
+        progressCircle.style.filter = 'drop-shadow(0 0 8px rgba(239,68,68,0.6))';
       } else if (timeLeft <= 8) {
-        progressCircle.style.stroke = '#f59e0b';
+        progressCircle.style.stroke = '#f97316';
+        progressCircle.style.filter = 'drop-shadow(0 0 6px rgba(249,115,22,0.5))';
       } else {
-        progressCircle.style.stroke = '#22c55e';
+        progressCircle.style.stroke = '#f97316';
+        progressCircle.style.filter = 'drop-shadow(0 0 6px rgba(249,115,22,0.5))';
       }
     }
 
@@ -299,12 +394,14 @@
 
       timeLeft = Math.max(0, timeLeft - delta);
       updateDisplay();
+      broadcastState();
 
       if (timeLeft <= 0 && !expired) {
         expired = true;
         running = false;
         playBuzzer();
-        statusBar.textContent = 'VIOLATION - 24秒オーバー';
+        broadcastState();
+        statusBar.textContent = 'VIOLATION';
         statusBar.style.color = '#ef4444';
         showStartButton();
         return;
@@ -334,7 +431,8 @@
       }
       showStartButton();
       statusBar.textContent = 'STOPPED';
-      statusBar.style.color = '#f59e0b';
+      statusBar.style.color = '#f97316';
+      broadcastState();
     }
 
     function resetTimer(seconds) {
@@ -349,8 +447,9 @@
       maxTime = seconds;
       updateDisplay();
       showStartButton();
-      statusBar.textContent = seconds + '秒にリセット';
-      statusBar.style.color = '#888';
+      statusBar.textContent = seconds + 's RESET';
+      statusBar.style.color = '#666';
+      broadcastState();
     }
 
     function fullReset() {
@@ -366,6 +465,30 @@
     function showStopButton() {
       btnStart.style.display = 'none';
       btnStop.style.display = '';
+    }
+
+    // BroadcastChannel でディスプレイ画面に同期
+    const channel = new BroadcastChannel('shot-clock-sync');
+    function broadcastState() {
+      channel.postMessage({ timeLeft, maxTime, running, expired });
+    }
+
+    function openDisplay() {
+      const url = new URL('display.html', location.href);
+      window.open(url, '_blank');
+    }
+
+    const adjustRow = document.getElementById('adjustRow');
+
+    function adjustTime(delta) {
+      if (expired) return;
+      timeLeft = Math.max(0, Math.min(maxTime, timeLeft + delta));
+      updateDisplay();
+      broadcastState();
+    }
+
+    function toggleAdjust() {
+      adjustRow.classList.toggle('hidden');
     }
 
     // キーボードショートカット
