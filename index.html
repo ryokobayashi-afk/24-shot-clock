@@ -69,12 +69,12 @@
 
     .timer-display {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(5rem, 18vw, 8rem);
+      font-size: clamp(3.5rem, 13vw, 5.5rem);
       font-weight: 900;
       font-variant-numeric: tabular-nums;
       line-height: 1;
       transition: color 0.2s, text-shadow 0.3s;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.05em;
       text-shadow: 0 0 30px rgba(255,255,255,0.15);
     }
 
@@ -101,7 +101,7 @@
 
     .timer-decimal {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(2rem, 7vw, 4rem);
+      font-size: clamp(1.4rem, 5vw, 2.6rem);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       vertical-align: baseline;
@@ -163,20 +163,11 @@
       box-shadow: 0 4px 15px rgba(139,92,246,0.3);
     }
 
-    .btn-reset-full {
-      background: linear-gradient(135deg, #4b5563, #6b7280);
-      color: #fff;
-    }
-
     .adjust-row {
       display: flex;
       gap: 10px;
       justify-content: center;
       margin-top: 10px;
-    }
-
-    .adjust-row.hidden {
-      display: none;
     }
 
     .btn-adjust {
@@ -190,14 +181,47 @@
       min-width: 70px;
     }
 
-    .btn-toggle {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.12);
-      color: #555;
-      font-size: 0.7rem;
-      padding: 5px 14px;
+    .settings-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 500px;
+      padding: 0 16px;
+      margin-top: 12px;
+    }
+
+    .btn-setting {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #ddd;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 9px 14px;
       border-radius: 20px;
-      margin-top: 8px;
+      min-width: 0;
+      text-transform: none;
+      letter-spacing: 0.04em;
+    }
+
+    .btn-buzzer {
+      background: linear-gradient(135deg, #b45309, #f59e0b);
+      color: #fff;
+      border: none;
+      box-shadow: 0 3px 12px rgba(245,158,11,0.3);
+    }
+
+    .btn-light.is-off {
+      background: linear-gradient(135deg, #1f2937, #374151);
+      color: #9ca3af;
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .btn-light.is-on {
+      background: linear-gradient(135deg, #ca8a04, #eab308);
+      color: #1a1a00;
+      border: none;
+      box-shadow: 0 3px 12px rgba(234,179,8,0.3);
     }
 
     .btn-display {
@@ -228,6 +252,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
       pointer-events: none;
       overflow: visible;
     }
@@ -266,10 +292,10 @@
 
   <div class="timer-container">
     <svg class="progress-ring" width="200" height="200" viewBox="0 0 200 200">
-      <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
-      <circle id="progressCircle" cx="100" cy="100" r="95" fill="none" stroke="#f97316"
+      <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
+      <circle id="progressCircle" cx="100" cy="100" r="80" fill="none" stroke="#f97316"
               stroke-width="5" stroke-linecap="round"
-              stroke-dasharray="596.90" stroke-dashoffset="0"
+              stroke-dasharray="502.65" stroke-dashoffset="0"
               transform="rotate(-90 100 100)"
               style="filter: drop-shadow(0 0 6px rgba(249,115,22,0.5))"/>
     </svg>
@@ -281,28 +307,34 @@
 
   <div class="controls">
     <button id="btnStart" class="btn btn-start" onclick="startTimer()">START</button>
-    <button id="btnStop" class="btn btn-stop" onclick="stopTimer()" style="display:none">STOP</button>
-    <button id="btnReset24" class="btn btn-reset-24" onclick="resetTimer(24)">24</button>
-    <button id="btnReset14" class="btn btn-reset-14" onclick="resetTimer(14)">14</button>
-    <button id="btnResetFull" class="btn btn-reset-full" onclick="fullReset()">RESET</button>
+    <button id="btnStop" class="btn btn-stop" onclick="stopTimer()" style="display:none">一時停止</button>
+    <button id="btnReset24" class="btn btn-reset-24" onclick="resetTimer(24, true)">24</button>
+    <button id="btnReset14" class="btn btn-reset-14" onclick="resetTimer(14, true)">14</button>
   </div>
 
-  <div id="adjustRow" class="adjust-row hidden">
+  <div id="adjustRow" class="adjust-row">
     <button class="btn btn-adjust" onclick="adjustTime(-1)">-1秒</button>
     <button class="btn btn-adjust" onclick="adjustTime(+1)">+1秒</button>
   </div>
-  <button class="btn btn-toggle" onclick="toggleAdjust()">±1秒 表示</button>
+
+  <div class="settings-row">
+    <button id="btnBuzzer" class="btn btn-setting btn-buzzer" onclick="manualBuzzer()">🔔 ブザー</button>
+    <button id="btnTone" class="btn btn-setting" onclick="cycleTone()">音色: 標準</button>
+    <button id="btnVolume" class="btn btn-setting" onclick="cycleVolume()">音量: 100%</button>
+    <button id="btnLight" class="btn btn-setting btn-light is-on" onclick="toggleLight()">消灯</button>
+  </div>
+
   <button class="btn btn-display" onclick="openDisplay()">ディスプレイを開く</button>
 
   <div id="statusBar" class="status-bar"></div>
 
   <div class="keyboard-hint">
-    Space: Start/Stop &nbsp; R: 24秒リセット &nbsp; T: 14秒リセット &nbsp; Esc: フルリセット
+    Space: 開始 / 一時停止 &nbsp; R: 24秒スタート &nbsp; T: 14秒スタート &nbsp; Esc: 24秒で停止
   </div>
 
   <script>
     const TOTAL_TIME = 24;
-    const CIRCUMFERENCE = 2 * Math.PI * 95;
+    const CIRCUMFERENCE = 2 * Math.PI * 80;
 
     let timeLeft = TOTAL_TIME;
     let maxTime = TOTAL_TIME;
@@ -310,6 +342,19 @@
     let lastTimestamp = null;
     let animFrameId = null;
     let expired = false;
+    let buzzerScheduled = false;
+    let lightOn = true;
+
+    // ブザー設定（プリセットとして localStorage に保存）
+    const BUZZER_TONES = [
+      { name: '標準',  freqs: [310, 314, 620],  types: ['sawtooth', 'sawtooth', 'square'], dur: 2.2, noise: true },
+      { name: '電子',  freqs: [880, 1320],       types: ['square', 'square'],               dur: 1.2, noise: false },
+      { name: 'ホーン', freqs: [180, 220, 360],  types: ['sawtooth', 'sawtooth', 'sine'],   dur: 2.4, noise: true },
+      { name: 'ベル',  freqs: [660, 990, 1320],  types: ['sine', 'sine', 'sine'],           dur: 1.6, noise: false },
+    ];
+    const VOLUME_LEVELS = [1.0, 0.75, 0.5, 0.25];
+    let buzzerTone = 0;
+    let buzzerVolume = 1.0;
 
     const timerDisplay = document.getElementById('timerDisplay');
     const timerDecimal = document.getElementById('timerDecimal');
@@ -318,23 +363,133 @@
     const btnStart = document.getElementById('btnStart');
     const btnStop = document.getElementById('btnStop');
     const statusBar = document.getElementById('statusBar');
+    const btnTone = document.getElementById('btnTone');
+    const btnVolume = document.getElementById('btnVolume');
+    const btnLight = document.getElementById('btnLight');
 
     // ブザー音を生成
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function playBuzzer() {
-      const oscillator = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      oscillator.connect(gain);
-      gain.connect(audioCtx.destination);
+    function playBuzzer(offset = 0) {
+      const vol = buzzerVolume;
+      if (vol <= 0) return;
+      const tone = BUZZER_TONES[buzzerTone] || BUZZER_TONES[0];
+      const dur = tone.dur;
+      const t = audioCtx.currentTime + Math.max(0, offset);
 
-      oscillator.type = 'square';
-      oscillator.frequency.value = 800;
-      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+      // ディストーション（歪み）を作成
+      const distortion = audioCtx.createWaveShaper();
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) {
+        const x = (i * 2) / 256 - 1;
+        curve[i] = (Math.PI + 300) * x / (Math.PI + 300 * Math.abs(x));
+      }
+      distortion.curve = curve;
 
-      oscillator.start(audioCtx.currentTime);
-      oscillator.stop(audioCtx.currentTime + 1.2);
+      // コンプレッサー（音圧を上げる）
+      const compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.value = -20;
+      compressor.knee.value = 5;
+      compressor.ratio.value = 12;
+      compressor.attack.value = 0.001;
+      compressor.release.value = 0.1;
+
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0.0, t);
+      masterGain.gain.linearRampToValueAtTime(vol, t + 0.01); // 鋭いアタック
+      masterGain.gain.setValueAtTime(vol, t + dur * 0.36);
+      masterGain.gain.linearRampToValueAtTime(0.0, t + dur);
+
+      distortion.connect(compressor);
+      compressor.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      // メイン音（少しデチューンして太さを出す）
+      tone.freqs.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = tone.types[i] || 'sawtooth';
+        osc.frequency.setValueAtTime(freq, t);
+        g.gain.value = i === tone.freqs.length - 1 ? 0.3 : 0.5;
+        osc.connect(g);
+        g.connect(distortion);
+        osc.start(t);
+        osc.stop(t + dur);
+      });
+
+      // 衝撃音（ノイズバースト）で打撃感を演出
+      if (tone.noise) {
+        const bufferSize = audioCtx.sampleRate * 0.08;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.6 * vol, t);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        noise.connect(noiseGain);
+        noiseGain.connect(audioCtx.destination);
+        noise.start(t);
+      }
+    }
+
+    function manualBuzzer() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      playBuzzer(0);
+    }
+
+    function cycleTone() {
+      buzzerTone = (buzzerTone + 1) % BUZZER_TONES.length;
+      updateSettingButtons();
+      saveSettings();
+      manualBuzzer(); // 切り替えた音色を試聴
+    }
+
+    function cycleVolume() {
+      const idx = VOLUME_LEVELS.indexOf(buzzerVolume);
+      buzzerVolume = VOLUME_LEVELS[(idx + 1) % VOLUME_LEVELS.length];
+      updateSettingButtons();
+      saveSettings();
+      manualBuzzer(); // 切り替えた音量を試聴
+    }
+
+    function updateSettingButtons() {
+      btnTone.textContent = '音色: ' + (BUZZER_TONES[buzzerTone] || BUZZER_TONES[0]).name;
+      btnVolume.textContent = '音量: ' + Math.round(buzzerVolume * 100) + '%';
+    }
+
+    function toggleLight() {
+      setLight(!lightOn);
+    }
+
+    function setLight(on) {
+      lightOn = on;
+      btnLight.textContent = on ? '消灯' : '点灯';
+      btnLight.classList.toggle('is-on', on);
+      btnLight.classList.toggle('is-off', !on);
+      broadcastState();
+    }
+
+    // 設定（音色・音量）をプリセットとして保存／復元
+    function saveSettings() {
+      try {
+        localStorage.setItem('shotClockSettings', JSON.stringify({ buzzerTone, buzzerVolume }));
+      } catch (e) {}
+    }
+
+    function loadSettings() {
+      try {
+        const s = JSON.parse(localStorage.getItem('shotClockSettings'));
+        if (s) {
+          if (Number.isInteger(s.buzzerTone) && s.buzzerTone >= 0 && s.buzzerTone < BUZZER_TONES.length) {
+            buzzerTone = s.buzzerTone;
+          }
+          if (VOLUME_LEVELS.includes(s.buzzerVolume)) {
+            buzzerVolume = s.buzzerVolume;
+          }
+        }
+      } catch (e) {}
     }
 
     function updateDisplay() {
@@ -396,10 +551,14 @@
       updateDisplay();
       broadcastState();
 
+      if (timeLeft <= 0.1 && !buzzerScheduled) {
+        buzzerScheduled = true;
+        playBuzzer(timeLeft);
+      }
+
       if (timeLeft <= 0 && !expired) {
         expired = true;
         running = false;
-        playBuzzer();
         broadcastState();
         statusBar.textContent = 'VIOLATION';
         statusBar.style.color = '#ef4444';
@@ -419,6 +578,7 @@
       lastTimestamp = null;
       statusBar.textContent = '';
       showStopButton();
+      broadcastState();
       animFrameId = requestAnimationFrame(tick);
     }
 
@@ -435,21 +595,29 @@
       broadcastState();
     }
 
-    function resetTimer(seconds) {
+    function resetTimer(seconds, autoStart = false) {
       running = false;
       lastTimestamp = null;
       expired = false;
+      buzzerScheduled = false;
       if (animFrameId) {
         cancelAnimationFrame(animFrameId);
         animFrameId = null;
       }
       timeLeft = seconds;
       maxTime = seconds;
+      lightOn = true; // 24/14 等のリセットで自動点灯
       updateDisplay();
-      showStartButton();
-      statusBar.textContent = seconds + 's RESET';
-      statusBar.style.color = '#666';
-      broadcastState();
+      if (autoStart) {
+        setLight(true);
+        startTimer();
+      } else {
+        setLight(true);
+        showStartButton();
+        statusBar.textContent = seconds + 's SET';
+        statusBar.style.color = '#666';
+        broadcastState();
+      }
     }
 
     function fullReset() {
@@ -470,7 +638,7 @@
     // BroadcastChannel でディスプレイ画面に同期
     const channel = new BroadcastChannel('shot-clock-sync');
     function broadcastState() {
-      channel.postMessage({ timeLeft, maxTime, running, expired });
+      channel.postMessage({ timeLeft, maxTime, running, expired, lightOn });
     }
 
     function openDisplay() {
@@ -478,17 +646,13 @@
       window.open(url, '_blank');
     }
 
-    const adjustRow = document.getElementById('adjustRow');
-
     function adjustTime(delta) {
       if (expired) return;
-      timeLeft = Math.max(0, Math.min(maxTime, timeLeft + delta));
+      timeLeft = Math.max(0, Math.min(TOTAL_TIME, timeLeft + delta));
+      // 手動で増やした分はバー（残量リング）の基準も引き上げる（24秒上限）
+      if (timeLeft > maxTime) maxTime = timeLeft;
       updateDisplay();
       broadcastState();
-    }
-
-    function toggleAdjust() {
-      adjustRow.classList.toggle('hidden');
     }
 
     // キーボードショートカット
@@ -505,10 +669,10 @@
           }
           break;
         case 'KeyR':
-          resetTimer(24);
+          resetTimer(24, true);
           break;
         case 'KeyT':
-          resetTimer(14);
+          resetTimer(14, true);
           break;
         case 'Escape':
           fullReset();
@@ -517,7 +681,10 @@
     });
 
     // 初期表示
+    loadSettings();
+    updateSettingButtons();
     updateDisplay();
+    broadcastState();
   </script>
 </body>
 </html>
